@@ -16,7 +16,7 @@ analyzer(url, analyzers, options);
     * **`interval`**: Video seconds between samples (defaults to 1).
     * **`callback`**: Function to be called on every analyzed sample. It receives an object with the data of the analyzed sample, as well as the progress of the analysis.
 
-* **Returns** a promise that resolves to an array of data when the analysis is finished, or rejects if it's cancelled. It also has a `cancel()` method to cancel the analysis.
+* **Returns** a promise that resolves to an array of data when the analysis is finished, or rejects if there's an error or it's cancelled. It also has a `cancel()` method to cancel the analysis.
 
 ## Examples
 
@@ -50,8 +50,8 @@ analyzer('/video.mp4', [mainColorAnalyzer], {
 #### With cancellation
 
 ```js
-const analysis = analyzer('/video.mp4', [mainColorAnalyzer]).catch(() => {
-  console.log('Analysis has been cancelled');
+const analysis = analyzer('/video.mp4', [mainColorAnalyzer]).catch(error => {
+  console.log(error ? 'Error during analysis' : 'Analysis has been cancelled');
 });
 
 analysis.cancel(); // Makes the `analysis` promise to reject
