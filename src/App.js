@@ -3,7 +3,10 @@ import analyzer from './analyzer';
 import { colorAnalyzer } from './analyzer/types';
 import testVideoUrl from './videos/caminandes.mp4';
 
-const analyze = options => analyzer(testVideoUrl, [colorAnalyzer], options);
+const formatTime = seconds => {
+  const minutes = Math.floor(seconds / 60);
+  return minutes > 1 ? `${minutes} minutes` : `${seconds} seconds`;
+};
 
 const ColorPatch = ({ color }) => (
   <div
@@ -21,43 +24,55 @@ class App extends Component {
     isAnalyzing: false,
     isCancelling: false,
     result: null,
+    duration: null,
   };
-
-  analysis = null;
 
   onProgress = result => {
     this.setState({ result });
     console.log(result);
   };
 
-  onFinished = result => {
-    this.setState({ isAnalyzing: false, result });
-    console.log('Finished', result);
+  onFinished = data => {
+    this.setState({
+      isAnalyzing: false,
+      result: null,
+      duration: Math.round((new Date() - this.analysisStart) / 1000),
+    });
+    console.log('Finished', data);
   };
 
-  onCancelled = () => {
+  onErrorOrCancelled = err => {
     this.setState({ isAnalyzing: false, isCancelling: false });
-    console.log('Cancelled');
+    console.log(err || 'Cancelled');
+  };
+
+  analyze = options => {
+    this.analysisStart = new Date();
+    this.setState({
+      isAnalyzing: true,
+      result: null,
+      duration: null,
+    });
+
+    return analyzer(testVideoUrl, [colorAnalyzer], options);
   };
 
   handleAnalyzeAll = () => {
-    this.analysis = analyze({
+    this.analysis = this.analyze({
       callback: this.onProgress,
     });
 
-    this.setState({ isAnalyzing: true });
-    this.analysis.then(this.onFinished).catch(this.onCancelled);
+    this.analysis.then(this.onFinished).catch(this.onErrorOrCancelled);
   };
 
   handleAnalyzeFragment = () => {
-    this.analysis = analyze({
+    this.analysis = this.analyze({
       from: 20,
       to: 30,
       callback: this.onProgress,
     });
 
-    this.setState({ isAnalyzing: true, result: null });
-    this.analysis.then(this.onFinished).catch(this.onCancelled);
+    this.analysis.then(this.onFinished).catch(this.onErrorOrCancelled);
   };
 
   handleCancel = () => {
@@ -68,7 +83,7 @@ class App extends Component {
   };
 
   render() {
-    const { isAnalyzing, isCancelling, result } = this.state;
+    const { isAnalyzing, isCancelling, result, duration } = this.state;
 
     return (
       <div className="App">
@@ -86,15 +101,14 @@ class App extends Component {
             Cancel
           </button>
         </div>
+        {duration && <p>Duration: {formatTime(duration)}</p>}
         {result && (
           <Fragment>
-            <p>Elapsed: {result.elapsedTime} s</p>
-            <p>Remaining: {result.timeRemaining} s</p>
+            <p>Remaining: {formatTime(result.timeLeft)}</p>
             <p>Completed: {result.percentageCompleted}%</p>
-            {isAnalyzing &&
-              result.data.colors.map((color, index) => (
-                <ColorPatch key={index} color={color} />
-              ))}
+            {result.data.colors.map((color, index) => (
+              <ColorPatch key={index} color={color} />
+            ))}
           </Fragment>
         )}
       </div>

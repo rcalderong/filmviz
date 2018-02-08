@@ -12,7 +12,7 @@ const addCanvasForVideo = canvasObj => {
 const getCanvasForIndex = videoIndex => canvasObjectByIndex[videoIndex];
 
 const setIndexForVideo = video => {
-  video.index = addCanvasForVideo(createCanvas());
+  video.index = addCanvasForVideo(createCanvas(video));
 };
 
 const getIndexFromVideo = video => video.index;
@@ -44,12 +44,13 @@ export const getTotalTime = async url => {
 export const createVideo = (url, { shouldCreateCanvas = true } = {}) => {
   const video = document.createElement('video');
   video.src = url;
-  if (shouldCreateCanvas) {
-    setIndexForVideo(video);
-  }
 
   return new Promise(resolve => {
     video.oncanplay = () => {
+      if (shouldCreateCanvas) {
+        setIndexForVideo(video);
+      }
+
       resolve(video);
     };
   });

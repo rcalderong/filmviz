@@ -14,9 +14,9 @@ analyzer(url, analyzers, options);
     * **`from`**: Video second to start the analysis (defaults to 0).
     * **`to`**: Video second to finish the analysis (defaults to the duration of the video).
     * **`interval`**: Video seconds between samples (defaults to 1).
-    * **`callback`**: Function to be called on every analyzed sample. It receives an object with the data of the analyzed sample (`data`), as well as stats of the current progress of the analysis (`elapsedTime`, `timeRemaining`, `percentageCompleted`).
+    * **`callback`**: Function to be called on every analyzed sample. It receives an object with the data of the analyzed sample, as well as the progress of the analysis.
 
-* **Returns** a promise that resolves when the analysis is finished or rejects if it's cancelled. It also has a `cancel()` method to cancel the analysis.
+* **Returns** a promise that resolves to an array of data when the analysis is finished, or rejects if it's cancelled. It also has a `cancel()` method to cancel the analysis.
 
 ## Examples
 
@@ -25,8 +25,7 @@ analyzer(url, analyzers, options);
 #### Basic
 
 ```js
-analyzer('/video.mp4', [mainColorAnalyzer]).then(({ data, elapsedTime }) => {
-  console.log(`Analysis took ${elapsedTime} seconds`);
+analyzer('/video.mp4', [mainColorAnalyzer]).then(data => {
   console.log(
     `Predominant color at 10th sample (${data[10].time} seconds): ${
       data[10].color
@@ -35,18 +34,15 @@ analyzer('/video.mp4', [mainColorAnalyzer]).then(({ data, elapsedTime }) => {
 });
 ```
 
-#### With callback
+#### With options
 
 ```js
 analyzer('/video.mp4', [mainColorAnalyzer], {
   from: 10,
   to: 20,
   interval: 2,
-  callback: ({ data, elapsedTime, timeRemaining, percentageCompleted }) => {
-    console.log(
-      `${percentageCompleted}% has been analyzed in ${elapsedTime} seconds`
-    );
-    console.log(`Estimated time remaining is ${timeRemaining} seconds`);
+  callback: ({ data, timeLeft, percentageCompleted }) => {
+    console.log(`${percentageCompleted}% analized (${timeLeft} seconds left)`);
   },
 });
 ```

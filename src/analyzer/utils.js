@@ -1,9 +1,6 @@
-export const getArrayOf = (length, mapFn = (x, i) => i) =>
-  Array.from({ length }, mapFn);
-
 export const flattenArray = array => [].concat(...array);
 
-export const arrayIntoChunks = (array, chunkSize) => {
+export const chunkArray = (array, chunkSize) => {
   const chunksNumber = Math.ceil(array.length / chunkSize);
   return Array.from({ length: chunksNumber }).map((x, i) => {
     const firstIndex = i * chunkSize;

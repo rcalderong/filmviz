@@ -1,10 +1,9 @@
 import { createVideo, getTotalTime, grabSample } from './video';
 import {
-  getArrayOf,
   runSequentially,
   mapToPromise,
   cancellablePromise,
-  arrayIntoChunks,
+  chunkArray,
   flattenArray,
   mergeObjects,
   getProcessorThreads,
@@ -50,7 +49,7 @@ const analyzeSamples = ({
 const getChunksPerThread = samplingTimes => {
   const processingThreads = getProcessorThreads() || DEFAULT_PROCESSING_THREADS;
 
-  return arrayIntoChunks(
+  return chunkArray(
     samplingTimes,
     Math.ceil(samplingTimes.length / processingThreads)
   );
@@ -78,8 +77,8 @@ const analyze = (
       });
     };
 
-    const samplingTimes = getArrayOf(
-      totalSamples,
+    const samplingTimes = Array.from(
+      { length: totalSamples },
       (x, i) => from + i * interval
     );
     const samplingTimesChunks = getChunksPerThread(samplingTimes);
@@ -95,14 +94,7 @@ const analyze = (
       )
     );
 
-    return {
-      data: flattenArray(resultChunks),
-      ...getStats({
-        analysisStart,
-        analyzedSamples,
-        totalSamples,
-      }),
-    };
+    return flattenArray(resultChunks);
   });
 
 export default analyze;
