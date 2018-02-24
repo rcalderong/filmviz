@@ -11,12 +11,14 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "lint": "eslint src/**/*.{js,jsx}",
     "test": "react-scripts test --env=jsdom",
     "coverage": "npm test -- --coverage",
     "precommit": "lint-staged",
     "eject": "react-scripts eject"
   },
   "devDependencies": {
+    "eslint": "^4.18.1",
     "husky": "^0.14.3",
     "lint-staged": "^6.1.0",
     "prettier": "^1.10.2"
@@ -27,6 +29,7 @@
   },
   "lint-staged": {
     "src/**/*.{js,jsx,json,css}": [
+      "eslint --fix",
       "prettier",
       "git add"
     ]
