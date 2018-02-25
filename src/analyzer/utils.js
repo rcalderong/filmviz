@@ -1,10 +1,12 @@
 export const flattenArray = array => [].concat(...array);
 
 export const chunkArray = (array, chunkSize) => {
-  const chunksNumber = Math.ceil(array.length / chunkSize);
+  const roundedChunkSize = Math.ceil(chunkSize);
+  const chunksNumber = Math.ceil(array.length / roundedChunkSize);
+
   return Array.from({ length: chunksNumber }).map((x, i) => {
-    const firstIndex = i * chunkSize;
-    return array.slice(firstIndex, firstIndex + chunkSize);
+    const firstIndex = i * roundedChunkSize;
+    return array.slice(firstIndex, firstIndex + roundedChunkSize);
   });
 };
 

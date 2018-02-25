@@ -20,9 +20,10 @@ Array of functions to be run for every sample. They receive an image and must re
 
 Optional object with the following keys:
 
-* **`from`**: Video second to start the analysis (defaults to 0).
-* **`to`**: Video second to finish the analysis (defaults to the duration of the video).
-* **`interval`**: Video seconds between samples (defaults to 1).
+* **`from`**: Video second to start the analysis (defaults to 0)
+* **`to`**: Video second to finish the analysis (defaults to duration of video)
+* **`interval`**: Video seconds between samples (defaults to 1)
+* **`threads`**: Number of concurrent processes (defaults to computer cores)
 * **`callback`**: Function to be called on every analyzed sample. It receives an object with:
   * **`percentageCompleted`** in %
   * **`timeLeft`** in seconds
