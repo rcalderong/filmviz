@@ -3,7 +3,7 @@
 ## API
 
 ```
-analyzer(url, analyzers, options);
+analyze(url, options);
 ```
 
 ### Params
@@ -12,16 +12,13 @@ analyzer(url, analyzers, options);
 
 [Object url](https://developer.mozilla.org/docs/Web/API/URL/createObjectURL) of the video to be analyzed.
 
-#### `analyzers`
-
-Array of functions to be run for every sample. They receive an image and must return a promise that resolves to an object.
-
 #### `options`
 
 Optional object with the following keys:
 
 * **`from`**: Video second to start the analysis (defaults to 0)
 * **`to`**: Video second to finish the analysis (defaults to duration of video)
+* **`types`**: Array of types of analysis to be run on the video (defaults to all)
 * **`interval`**: Video seconds between samples (defaults to 1)
 * **`threads`**: Number of concurrent processes (defaults to computer cores)
 * **`callback`**: Function to be called on every analyzed sample. It receives an object with:
@@ -30,7 +27,7 @@ Optional object with the following keys:
   * **`data`** object with:
     * **`time`**: time of the sample in seconds
     * **`image`**: [ImageData](https://developer.mozilla.org/docs/Web/API/ImageData) of the sample
-    * Results of the analysis of the sample
+    * **`colors`, `motion`**: Results of the analysis of the sample
 
 ### Returns
 
@@ -39,49 +36,48 @@ Optional object with the following keys:
 
 ## Examples
 
-### Analysis
-
-#### Basic
+### Basic
 
 ```js
-analyzer('/video.mp4', [mainColorAnalyzer]).then(data => {
-  console.log(
-    `Predominant color at 10th sample (${data[10].time} seconds): ${
-      data[10].color
-    }`
-  );
+import analyze from './analyzer';
+
+analyze('/video.mp4').then(data => {
+  console.log('Analysis finished');
+
+  const { time, colors, motion } = data[9];
+  console.log(`Results of tenth sample (${time} seconds)`);
+  console.log(`Color palette: ${colors}`);
+  console.log(`Motion: ${motion}`);
 });
 ```
 
-#### With options
+### With options
 
 ```js
-analyzer('/video.mp4', [mainColorAnalyzer], {
+import analyze, { TYPES } from './analyzer';
+
+analyze('/video.mp4', {
   from: 10,
   to: 20,
+  types: [TYPES.MOTION],
   interval: 2,
+  threads: 3,
   callback: ({ data, timeLeft, percentageCompleted }) => {
-    console.log(`Predominant color at ${data.time} seconds: (${data.color}`);
+    const { time, colors } = data;
+    console.log(`Motion at ${time} seconds: (${motion}`);
     console.log(`${percentageCompleted}% analized (${timeLeft} seconds left)`);
   },
 });
 ```
 
-#### With cancellation
+### With cancellation
 
 ```js
-const analysis = analyzer('/video.mp4', [mainColorAnalyzer]).catch(error => {
+import analyze from './analyzer';
+
+const analysis = analyze('/video.mp4').catch(error => {
   console.log(error ? 'Error during analysis' : 'Analysis has been cancelled');
 });
 
 analysis.cancel(); // Makes the `analysis` promise to reject
-```
-
-### Analyzer function
-
-```js
-const mainColorAnalyzer = image => new Promise(resolve => {
-  const mainColor = ... // Do analysis
-  return {color: mainColor};
-});
 ```

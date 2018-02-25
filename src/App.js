@@ -1,6 +1,5 @@
 import React, { Component, Fragment } from 'react';
 import analyzer from './analyzer';
-import { colorAnalyzer, motionAnalyzer } from './analyzer/types';
 import testVideoUrl from './videos/caminandes.mp4';
 
 const formatTime = seconds => {
@@ -98,7 +97,7 @@ class App extends Component {
       duration: null,
     });
 
-    return analyzer(testVideoUrl, [colorAnalyzer, motionAnalyzer], options);
+    return analyzer(testVideoUrl, options);
   };
 
   handleAnalyzeAll = () => {

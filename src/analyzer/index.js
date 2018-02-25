@@ -1,3 +1,4 @@
+import ANALYSIS_TYPES from './types';
 import { createVideo, getTotalTime, grabSample } from './video';
 import {
   runSequentially,
@@ -12,23 +13,30 @@ import {
 } from './utils';
 import { getStats } from './stats';
 
-const DEFAULT_THREADS_NUMBER = getProcessorThreads() || 2;
-const DEFAULT_SAMPLING_INTERVAL_SECS = 1;
+export const TYPES = ANALYSIS_TYPES;
+export const DEFAULT_INTERVAL = 1;
+export const DEFAULT_THREADS = getProcessorThreads() || 2;
 
-const analyzeSample = async ({ video, analyzers, interval, time, accData }) => {
+const analyzeSample = async ({
+  video,
+  analyzeFns,
+  interval,
+  time,
+  accData,
+}) => {
   const image = await grabSample({ video, time });
   const prevImage = accData.length
     ? lastInArray(accData).image
     : await grabSample({ video, time: time - interval });
 
-  const data = await mapToPromise(analyzers, image, prevImage);
+  const data = await mapToPromise(analyzeFns, image, prevImage);
 
   return { time, image, ...mergeObjects(data) };
 };
 
 const analyzeSamples = ({
   url,
-  analyzers,
+  analyzeFns,
   interval,
   onAnalyzedSample,
   shouldCancel,
@@ -38,7 +46,7 @@ const analyzeSamples = ({
   return runSequentially(times, async (data = [], time, index) => {
     const sampleData = await analyzeSample({
       video,
-      analyzers,
+      analyzeFns,
       interval,
       time,
       accData: data,
@@ -69,12 +77,12 @@ const getTotalSamples = async ({ url, from, to, interval }) => {
 
 const analyze = (
   url,
-  analyzers,
   {
     from = 0,
     to,
-    interval = DEFAULT_SAMPLING_INTERVAL_SECS,
-    threads = DEFAULT_THREADS_NUMBER,
+    types: analyzeFns = Object.values(TYPES),
+    interval = DEFAULT_INTERVAL,
+    threads = DEFAULT_THREADS,
     callback,
   } = {}
 ) =>
@@ -100,7 +108,7 @@ const analyze = (
       samplingTimesChunks.map(
         analyzeSamples({
           url,
-          analyzers,
+          analyzeFns,
           interval,
           onAnalyzedSample,
           shouldCancel,
