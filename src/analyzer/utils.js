@@ -1,6 +1,13 @@
-export const flattenArray = array => [].concat(...array);
+export const flattenArray = (array = []) =>
+  array.reduce(
+    (flattened, element) =>
+      flattened.concat(
+        Array.isArray(element) ? flattenArray(element) : element
+      ),
+    []
+  );
 
-export const chunkArray = (array, chunkSize) => {
+export const chunkArray = (array = [], chunkSize) => {
   const roundedChunkSize = Math.ceil(chunkSize);
   const chunksNumber = Math.ceil(array.length / roundedChunkSize);
 
@@ -10,9 +17,9 @@ export const chunkArray = (array, chunkSize) => {
   });
 };
 
-export const lastInArray = array => array[array.length - 1];
+export const lastInArray = (array = []) => array[array.length - 1];
 
-export const mergeObjects = objects =>
+export const mergeObjects = (objects = []) =>
   objects.reduce(
     (prevMerge, object) => ({
       ...prevMerge,
@@ -21,13 +28,13 @@ export const mergeObjects = objects =>
     {}
   );
 
-export const runSequentially = (items, itemFn) =>
+export const runSequentially = (items = [], itemFn = () => {}) =>
   items.reduce(async (prevPromise, item, index) => {
     const prevReturn = await prevPromise;
     return itemFn(prevReturn, item, index);
   }, Promise.resolve());
 
-export const mapToPromise = (fnsArray, ...args) =>
+export const mapToPromise = (fnsArray = [], ...args) =>
   Promise.all(fnsArray.map(fn => fn(...args)));
 
 export const cancellablePromise = promise => {
