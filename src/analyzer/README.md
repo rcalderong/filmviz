@@ -6,17 +6,35 @@
 analyzer(url, analyzers, options);
 ```
 
-* **Params**
+### Params
 
-  * **`url`**: [Object url](https://developer.mozilla.org/docs/Web/API/URL/createObjectURL) of the video to be analyzed.
-  * **`analyzers`**: Array of functions to be run for every sample. They receive an image and must return a promise that resolves to an object.
-  * **`options`**: Optional object with the following keys
-    * **`from`**: Video second to start the analysis (defaults to 0).
-    * **`to`**: Video second to finish the analysis (defaults to the duration of the video).
-    * **`interval`**: Video seconds between samples (defaults to 1).
-    * **`callback`**: Function to be called on every analyzed sample. It receives an object with the data of the analyzed sample, as well as the progress of the analysis.
+#### `url`
 
-* **Returns** a promise that resolves to an array of data when the analysis is finished, or rejects if there's an error or it's cancelled. It also has a `cancel()` method to cancel the analysis.
+[Object url](https://developer.mozilla.org/docs/Web/API/URL/createObjectURL) of the video to be analyzed.
+
+#### `analyzers`
+
+Array of functions to be run for every sample. They receive an image and must return a promise that resolves to an object.
+
+#### `options`
+
+Optional object with the following keys:
+
+* **`from`**: Video second to start the analysis (defaults to 0).
+* **`to`**: Video second to finish the analysis (defaults to the duration of the video).
+* **`interval`**: Video seconds between samples (defaults to 1).
+* **`callback`**: Function to be called on every analyzed sample. It receives an object with:
+  * **`percentageCompleted`** in %
+  * **`timeLeft`** in seconds
+  * **`data`** object with:
+    * **`time`**: time of the sample in seconds
+    * **`image`**: [ImageData](https://developer.mozilla.org/docs/Web/API/ImageData) of the sample
+    * Results of the analysis of the sample
+
+### Returns
+
+* A promise that resolves to an array of `data` when the analysis is finished, or rejects if there's an error or it's cancelled
+* It also has a `cancel()` method to cancel the analysis
 
 ## Examples
 
@@ -42,6 +60,7 @@ analyzer('/video.mp4', [mainColorAnalyzer], {
   to: 20,
   interval: 2,
   callback: ({ data, timeLeft, percentageCompleted }) => {
+    console.log(`Predominant color at ${data.time} seconds: (${data.color}`);
     console.log(`${percentageCompleted}% analized (${timeLeft} seconds left)`);
   },
 });

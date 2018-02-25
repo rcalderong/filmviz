@@ -1,22 +1,20 @@
-import { createImageFromDataUrl } from './image';
-
 const MAX_SIZE = 200;
-
-const getDataUrlFromCanvas = (canvas, { format }) => canvas.toDataURL(format);
 
 const drawImageInCanvas = ({ video, canvas, ctx }) => {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 };
 
+const getImageFromCanvas = ({ canvas, ctx }) =>
+  ctx.getImageData(0, 0, canvas.width, canvas.height);
+
 export const getImageFromVideo = ({
   video,
-  format = 'image/jpg',
+  format = 'image/png',
   canvas,
   ctx,
 }) => {
   drawImageInCanvas({ video, canvas, ctx });
-  const dataUrl = getDataUrlFromCanvas(canvas, { format });
-  return createImageFromDataUrl(dataUrl);
+  return getImageFromCanvas({ canvas, ctx });
 };
 
 const getAspectRatio = video => {

@@ -1,6 +1,6 @@
 import React, { Component, Fragment } from 'react';
 import analyzer from './analyzer';
-import { colorAnalyzer } from './analyzer/types';
+import { colorAnalyzer, motionAnalyzer } from './analyzer/types';
 import testVideoUrl from './videos/caminandes.mp4';
 
 const formatTime = seconds => {
@@ -18,6 +18,50 @@ const ColorPatch = ({ color }) => (
     }}
   />
 );
+
+const ColorResult = ({ colors }) => (
+  <div>
+    {colors.map((color, index) => <ColorPatch key={index} color={color} />)}
+  </div>
+);
+
+const MotionResult = ({ motion }) => {
+  const color = motion > 70 ? 'red' : 'green';
+  return <div style={{ color }}>Motion: {motion}%</div>;
+};
+
+class FramePreview extends React.Component {
+  componentDidMount() {
+    this.updateCanvas(this.props.imageData);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.updateCanvas(nextProps.imageData);
+  }
+
+  shouldComponentUpdate() {
+    return false;
+  }
+
+  updateCanvas = imageData => {
+    const ctx = this.canvas.getContext('2d');
+    ctx.putImageData(imageData, 0, 0);
+  };
+
+  render() {
+    const { imageData: { width, height } } = this.props;
+
+    return (
+      <canvas
+        ref={domNode => {
+          this.canvas = domNode;
+        }}
+        width={width}
+        height={height}
+      />
+    );
+  }
+}
 
 class App extends Component {
   state = {
@@ -54,7 +98,7 @@ class App extends Component {
       duration: null,
     });
 
-    return analyzer(testVideoUrl, [colorAnalyzer], options);
+    return analyzer(testVideoUrl, [colorAnalyzer, motionAnalyzer], options);
   };
 
   handleAnalyzeAll = () => {
@@ -106,9 +150,11 @@ class App extends Component {
           <Fragment>
             <p>Remaining: {formatTime(result.timeLeft)}</p>
             <p>Completed: {result.percentageCompleted}%</p>
-            {result.data.colors.map((color, index) => (
-              <ColorPatch key={index} color={color} />
-            ))}
+            <FramePreview imageData={result.data.image} />
+            {result.data.colors && <ColorResult colors={result.data.colors} />}
+            {result.data.motion !== undefined && (
+              <MotionResult motion={result.data.motion} />
+            )}
           </Fragment>
         )}
       </div>

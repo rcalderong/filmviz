@@ -8,6 +8,8 @@ export const chunkArray = (array, chunkSize) => {
   });
 };
 
+export const lastInArray = array => array[array.length - 1];
+
 export const mergeObjects = objects =>
   objects.reduce(
     (prevMerge, object) => ({
@@ -18,9 +20,9 @@ export const mergeObjects = objects =>
   );
 
 export const runSequentially = (items, itemFn) =>
-  items.reduce(async (prevPromise, item) => {
+  items.reduce(async (prevPromise, item, index) => {
     const prevReturn = await prevPromise;
-    return itemFn(item, prevReturn);
+    return itemFn(prevReturn, item, index);
   }, Promise.resolve());
 
 export const mapToPromise = (fnsArray, ...args) =>

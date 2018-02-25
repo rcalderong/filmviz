@@ -8,57 +8,62 @@ import {
   mergeObjects,
   getProcessorThreads,
   now,
+  lastInArray,
 } from './utils';
 import { getStats } from './stats';
 
-const DEFAULT_PROCESSING_THREADS = 2;
-const DEFAULT_SAMPLING_INTERVAL = 1;
+const DEFAULT_THREADS_NUMBER = getProcessorThreads() || 2;
+const DEFAULT_SAMPLING_INTERVAL_SECS = 1;
 
-const analyzeSample = async ({ video, analyzers, time }) => {
+const analyzeSample = async ({ video, analyzers, interval, time, accData }) => {
   const image = await grabSample({ video, time });
-  const data = await mapToPromise(analyzers, image);
+  const prevImage = accData.length
+    ? lastInArray(accData).image
+    : await grabSample({ video, time: time - interval });
 
-  return { time, ...mergeObjects(data) };
+  const data = await mapToPromise(analyzers, image, prevImage);
+
+  return { time, image, ...mergeObjects(data) };
 };
 
 const analyzeSamples = ({
   url,
   analyzers,
+  interval,
   onAnalyzedSample,
   getStats,
   shouldCancel,
 }) => async times => {
   const video = await createVideo(url);
 
-  return runSequentially(times, async (time, data = []) => {
+  return runSequentially(times, async (data = [], time, index) => {
+    const sampleData = await analyzeSample({
+      video,
+      analyzers,
+      interval,
+      time,
+      accData: data,
+    });
+
     if (shouldCancel()) {
       return Promise.reject();
     }
 
-    const sampleData = await analyzeSample({ video, analyzers, time });
-
-    const stats = getStats();
     if (onAnalyzedSample) {
-      onAnalyzedSample({ data: sampleData, ...stats });
+      onAnalyzedSample({ data: sampleData, ...getStats() });
     }
 
     return [...data, sampleData];
   });
 };
 
-const getChunksPerThread = samplingTimes => {
-  const processingThreads = getProcessorThreads() || DEFAULT_PROCESSING_THREADS;
-
-  return chunkArray(
-    samplingTimes,
-    Math.ceil(samplingTimes.length / processingThreads)
-  );
-};
+const getChunksPerThread = ({ samplingTimes, threadsNumber }) =>
+  chunkArray(samplingTimes, Math.ceil(samplingTimes.length / threadsNumber));
 
 const analyze = (
   url,
   analyzers,
-  { from = 0, to, interval = DEFAULT_SAMPLING_INTERVAL, callback } = {}
+  { from = 0, to, interval = DEFAULT_SAMPLING_INTERVAL_SECS, callback } = {}
 ) =>
   cancellablePromise(async shouldCancel => {
     const analysisStart = now();
@@ -81,12 +86,16 @@ const analyze = (
       { length: totalSamples },
       (x, i) => from + i * interval
     );
-    const samplingTimesChunks = getChunksPerThread(samplingTimes);
+    const samplingTimesChunks = getChunksPerThread({
+      samplingTimes,
+      threadsNumber: DEFAULT_THREADS_NUMBER,
+    });
     const resultChunks = await Promise.all(
       samplingTimesChunks.map(
         analyzeSamples({
           url,
           analyzers,
+          interval,
           onAnalyzedSample: callback,
           getStats: getStatsForSample,
           shouldCancel,
